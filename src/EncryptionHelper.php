@@ -9,23 +9,27 @@ class EncryptionHelper
 {
 
     const CIPHER = 'aes-256-cbc';
+    const ENCRYPTION_ITERATIONS = [
+        'v1' => 32768,
+        'v2' => 1024
+    ];
 
     private $pass;
     private $salt;
-
+    private $iterations;
 
     /**
      * Set the salt & password key
      *
      * @param      $saltKey string salt key
      * @param      $passKey string password key
+     * @param      $ageIdApiVersion decides the number of iterations
      */
-    function __construct($passKey, $saltKey = null)
+    function __construct($passKey, $saltKey = null, $ageIdApiVersion = "v2")
     {
         $this->pass = $passKey;
         $this->salt = $saltKey;
-
-
+        $this->iterations = self::ENCRYPTION_ITERATIONS[$ageIdApiVersion] ?? end(array_values(self::ENCRYPTION_ITERATIONS));
     }
 
 
@@ -52,8 +56,8 @@ class EncryptionHelper
      */
     private function AESEncryptBytes($clearBytes, $passBytes, $saltBytes)
     {
-        // create a key from the password and salt, use 32K iterations
-        $key     = new Rfc2898DeriveBytes($passBytes, $saltBytes, 32768);
+        // create a key from the password and salt
+        $key     = new Rfc2898DeriveBytes($passBytes, $saltBytes, $this->iterations);
         $derived = $key->derived();
         //AES encryption
         $encryptedBytes = openssl_encrypt($clearBytes, self::CIPHER, $derived->key, null, $derived->iv);
@@ -75,6 +79,10 @@ class EncryptionHelper
         //generate random salt
         if (is_null($this->salt)) {
             $this->salt = random_bytes(openssl_cipher_iv_length(self::CIPHER));
+        }
+
+        if( mb_strlen($this->salt, '8bit') < 16 ) {
+            throw new AgeIdException('Salt should be at least 16 Bytes!');
         }
 
         $clearText = mb_convert_encoding($clearText, 'UTF-8');
@@ -189,7 +197,7 @@ class EncryptionHelper
      */
     private function AESDecryptBytes($cryptText, $passBytes, $saltBytes)
     {
-        $key     = new Rfc2898DeriveBytes($passBytes, $saltBytes, 32768);
+        $key     = new Rfc2898DeriveBytes($passBytes, $saltBytes,  $this->iterations);
         $derived = $key->derived();
 
         $decrypted = openssl_decrypt($cryptText, self::CIPHER, $derived->key, null, $derived->iv);

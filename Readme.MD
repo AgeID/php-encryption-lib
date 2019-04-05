@@ -11,6 +11,17 @@ For PHP 5.6 compatibility, please install the PHP 5.x polyfill for random_bytes(
 
     composer require paragonie/random_compat
     
+    
+## Change Log
+
+List of releases and changes, with the latest at the top:
+
+  * v2.0 **[!] Should be used for v2 endpoint and forward  [!]**
+    * The number of iterations in EncryptionHelper is set by setting the version number on Instantiation; if it not set it will choose the latest version
+    * Only allow salt with at least 16 Bytes
+    * reduced the number of iterations to be 1024 by default
+  * [first-release]
+  
 Usage
 ---
 

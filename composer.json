@@ -6,7 +6,7 @@
   "require-dev": {
     "phpunit/phpunit": "6.5.*"
   },
-  
+
   "require": {
     "php": ">=5.6.0"
   },
@@ -15,7 +15,7 @@
       "AgeId\\": "src/"
     }
   },
- 
+
   "keywords": [
     "encryption",
     "AES",
