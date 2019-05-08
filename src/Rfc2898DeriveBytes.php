@@ -60,7 +60,7 @@ class Rfc2898DeriveBytes
         } else {
             $AESKeyLength = $this->getKeySize();
             $AESIVLength  = openssl_cipher_iv_length($this->cipher);
-            $pbkdf2       = hash_pbkdf2('sha1', $password, mb_convert_encoding($salt, 'UTF-8'), $this->iterations, $AESKeyLength + $AESIVLength, true);
+            $pbkdf2       = hash_pbkdf2('sha1', $password, $salt, $this->iterations, $AESKeyLength + $AESIVLength, true);
 
             $key          = substr($pbkdf2, 0, $AESKeyLength);
             $iv           = substr($pbkdf2, $AESKeyLength, $AESIVLength);

@@ -29,7 +29,7 @@ class EncryptionHelper
     {
         $this->pass = $passKey;
         $this->salt = $saltKey;
-        $this->iterations = self::ENCRYPTION_ITERATIONS[$ageIdApiVersion] ?? end(array_values(self::ENCRYPTION_ITERATIONS));
+        $this->iterations = self::ENCRYPTION_ITERATIONS[$ageIdApiVersion] ? self::ENCRYPTION_ITERATIONS[$ageIdApiVersion] : end(array_values(self::ENCRYPTION_ITERATIONS));
     }
 
 
@@ -79,15 +79,16 @@ class EncryptionHelper
         //generate random salt
         if (is_null($this->salt)) {
             $this->salt = random_bytes(openssl_cipher_iv_length(self::CIPHER));
+            $this->salt = base64_encode( $this->salt );
         }
 
-        if( mb_strlen($this->salt, '8bit') < 16 ) {
+        if( mb_strlen($this->salt, 'BASE64') < 15 ) {
             throw new AgeIdException('Salt should be at least 16 Bytes!');
         }
 
         $clearText = mb_convert_encoding($clearText, 'UTF-8');
         $pass      = mb_convert_encoding($this->pass, 'UTF-8');
-        $salt      = mb_convert_encoding($this->salt, 'UTF-8');
+        $salt      = $this->salt;
 
         $encrypted = $this->AESEncryptBytes($clearText, $pass, $salt);
 
@@ -104,7 +105,7 @@ class EncryptionHelper
         $mac = $this->hash($salt, $encrypted);
 
 
-        $json = json_encode(compact('salt', 'encrypted', 'mac'));
+        $json = json_encode(compact('salt', 'encrypted', 'mac'), JSON_UNESCAPED_SLASHES);
 
 
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -221,7 +222,6 @@ class EncryptionHelper
 
 
         $payload['salt'] = base64_decode($payload['salt']);
-        $payload['salt'] = mb_convert_encoding($payload['salt'], 'UTF-8');
 
         $decrypted = $this->AESDecryptBytes($payload['encrypted'], $pass, $payload['salt']);
 
